@@ -11,6 +11,7 @@ cvat:
   backend:
     labels: {}
     annotations: {}
+    nodeSelector: {}
     resources: {}
     affinity: {}
     tolerations: []
@@ -86,6 +87,7 @@ cvat:
         replicas: 1
         labels: {}
         annotations: {}
+        nodeSelector: {}
         resources: {}
         affinity: {}
         tolerations: []
