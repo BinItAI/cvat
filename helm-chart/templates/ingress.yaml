@@ -43,4 +43,14 @@ spec:
             name: {{ .Release.Name }}-frontend-service
             port:
               name: http
+
+      {{- if .Values.analytics.enabled }}
+      - path: /analytics
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ $.Release.Name }}-grafana
+            port:
+              number: 80
+      {{- end }}
 {{- end }}
