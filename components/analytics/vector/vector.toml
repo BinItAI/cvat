@@ -46,3 +46,9 @@ encoding.only_fields = [
     "payload",
     "access_token_id",
 ]
+
+[sinks.clickhouse.buffer]
+# Buffer to disk in case we loose connection for longer
+# periods of time
+type = "disk"
+max_size = 21_474_836_480 # 20GB
