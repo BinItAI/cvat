@@ -392,6 +392,14 @@ export interface PluginsState {
         loginPage: {
             loginForm: PluginComponent[];
         };
+        annotationPage: {
+            player: {
+                slider: PluginComponent[];
+            };
+            menuActions: {
+                items: PluginComponent[];
+            };
+        }
         modelsPage: {
             topBar: {
                 items: PluginComponent[];
@@ -428,6 +436,11 @@ export interface PluginsState {
         about: {
             links: {
                 items: PluginComponent[];
+            };
+        };
+        aiTools: {
+            interactors: {
+                extras: PluginComponent[];
             };
         };
         router: PluginComponent[];
