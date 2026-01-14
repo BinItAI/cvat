@@ -4,7 +4,7 @@
 
 import subprocess
 from collections.abc import Generator
-from contextlib import closing
+from fractions import Fraction
 from io import BytesIO
 
 import av
@@ -47,11 +47,26 @@ def generate_image_files(
     return images
 
 
-def generate_video_file(num_frames: int, size=(100, 50)) -> BytesIO:
+def generate_video_file(
+    num_frames: int,
+    *,
+    size: tuple[int, int] = (100, 50),
+    invalid_keyframes: bool = False,
+) -> BytesIO:
     f = BytesIO()
-    f.name = "video.avi"
+    f.name = "video.mkv"
+    chapters = [
+        {
+            "id": 0,
+            "start": 0,
+            "end": 100,
+            "time_base": Fraction(1, 1000),
+            "metadata": {"title": "Intro"},
+        }
+    ]
 
     with av.open(f, "w") as container:
+        container.set_chapters(chapters)
         stream = container.add_stream("mjpeg", rate=60)
         stream.width = size[0]
         stream.height = size[1]
@@ -60,6 +75,11 @@ def generate_video_file(num_frames: int, size=(100, 50)) -> BytesIO:
         for i in range(num_frames):
             frame = av.VideoFrame.from_image(Image.new("RGB", size=size, color=(i, i, i)))
             for packet in stream.encode(frame):
+                if invalid_keyframes:
+                    # Specify pts/dts values that result in 0 valid keyframes
+                    packet.pts = 10
+                    packet.dts = 10
+
                 container.mux(packet)
 
     f.seek(0)
@@ -73,11 +93,8 @@ def read_video_file(file: BytesIO) -> Generator[Image.Image, None, None]:
     with av.open(file) as container:
         video_stream = container.streams.video[0]
 
-        with closing(video_stream.codec_context):  # pyav has a memory leak in stream.close()
-            with closing(container.demux(video_stream)) as demux_iter:
-                for packet in demux_iter:
-                    for frame in packet.decode():
-                        yield frame.to_image()
+        for frame in container.decode(video_stream):
+            yield frame.to_image()
 
 
 def generate_manifest(path: str) -> None:
@@ -101,3 +118,4 @@ def generate_manifest(path: str) -> None:
         subprocess.check_output(command, stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         print(e.stderr.decode("utf-8"))
+        raise
